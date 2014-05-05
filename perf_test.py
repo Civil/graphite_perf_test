@@ -102,6 +102,7 @@ while 1:
 
     workers = []
     time_spent = float(time.time() - start_t)
+    output_log()
     log_msg("debug", "Sending %d took %f" % (connections_per_thread * options.threads * metrics, time_spent))
     speed = connections * metrics / time_spent
     if time_spent < 60:
