@@ -6,6 +6,7 @@ import re
 from math import sin
 from optparse import OptionParser
 from multiprocessing import Process, Queue
+from random import random
 
 DEBUG = 0
 def log_queue(thread, lvl, msg):
@@ -27,7 +28,8 @@ def generate_load(connections, metrics, thread):
     for i in xrange(connections):
         out = ""
         for j in xrange(metrics):
-            out += "%s.test%d.metric%d %s %s\n" % (options.prefix, i, j, sin(float(int(ts) + j)), ts)
+            out += "%s.test%d.metric%d %s %s\n" % (options.prefix, i, j, random(), ts)
+#            out += "%s.test%d.metric%d %s %s\n" % (options.prefix, i, j, sin(float(int(ts) + j)), ts)
         out += "\n\n"
         try:
             s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
