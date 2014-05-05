@@ -27,7 +27,7 @@ def generate_load(connections, metrics, thread):
     for i in xrange(connections):
         out = ""
         for j in xrange(metrics):
-            out += "%s.test%d.m%d %s %s\n" % (options.prefix, i, j, sin(float(int(ts) + j)), ts)
+            out += "%s.test%d.metric%d %s %s\n" % (options.prefix, i, j, sin(float(int(ts) + j)), ts)
         out += "\n\n"
         try:
             s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
@@ -92,13 +92,13 @@ while 1:
     start_t = time.time()
     connections_per_thread = int(connections / options.threads)
     log_msg("debug", "Sending %d metrics to graphite, using %d threads, %d connections/thread" % (connections_per_thread * options.threads * metrics, options.threads, connections_per_thread))
-    for i in range(1, options.threads):
+    for i in range(0, options.threads):
         worker = Process(target = generate_load, args = (connections_per_thread, metrics, i))
         workers.append(worker)
         worker.start()
 
-    for i in range(1, options.threads):
-        workers[i - 1].join()
+    for i in range(0, options.threads):
+        workers[i].join()
 
     workers = []
     time_spent = float(time.time() - start_t)
