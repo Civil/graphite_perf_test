@@ -27,8 +27,9 @@ def generate_load(connections, metrics, thread):
     log_queue(thread, "debug", "New iteration...")
     for i in xrange(connections):
         out = ""
+        base = options.prefix + ".test" + str(i) + ".metric"
         for j in xrange(metrics):
-            out += options.prefix + ".test" + str(i) + ".metric" + str(j) + " " + str(random()) + " " + ts + "\n"
+            out += base + str(j) + " " + str(random()) + " " + ts + "\n"
 #            out += "%s.test%d.metric%d %s %s\n" % (options.prefix, i, j, sin(float(int(ts) + j)), ts)
         out += "\n\n"
         try:
@@ -96,14 +97,16 @@ while 1:
     start_t = time.time()
     connections_per_thread = int(connections / options.threads)
     log_msg("debug", "Sending %d metrics to graphite, using %d threads, %d connections/thread" % (connections_per_thread * options.threads * metrics, options.threads, connections_per_thread))
-    for i in range(0, options.threads):
-        worker = Process(target = generate_load, args = (connections_per_thread, metrics, i))
-        workers.append(worker)
-        worker.start()
-
-    for i in range(0, options.threads):
-        worker = workers.pop()
-        worker.join()
+    if (options.threads == 1):
+        generate_load(connections_per_thread, metrics, 0)
+    else:
+        for i in range(0, options.threads):
+            worker = Process(target = generate_load, args = (connections_per_thread, metrics, i))
+            workers.append(worker)
+            worker.start()
+        for i in range(0, options.threads):
+            worker = workers.pop()
+            worker.join()
 
     time_spent = float(time.time() - start_t)
 
