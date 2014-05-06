@@ -10,14 +10,14 @@ from random import random
 
 DEBUG = 0
 def log_queue(thread, lvl, msg):
-    if re.match('debug', lvl.lower()):
+    if lvl.lower() == 'debug':
         if not DEBUG:
             return
     queue.put("%s [%s][%s] %s" % (time.ctime(), thread, lvl.lower(), msg))
     return
 
 def log_msg(lvl, msg):
-    if re.match('debug', lvl.lower()):
+    if lvl.lower() == 'debug':
         if not DEBUG:
             return
     print("%s [m][%s] %s" % (time.ctime(), lvl.lower(), msg))
