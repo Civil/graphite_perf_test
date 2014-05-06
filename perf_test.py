@@ -3,7 +3,7 @@ import socket
 import sys
 import time
 import re
-from math import sin
+from math import sqrt
 from optparse import OptionParser
 from multiprocessing import Process, Queue
 from random import random
@@ -28,7 +28,7 @@ def generate_load(connections, metrics, thread):
     for i in xrange(connections):
         out = ""
         for j in xrange(metrics):
-            out += "%s.test%d.metric%d %s %s\n" % (options.prefix, i, j, random(), ts)
+            out += options.prefix + ".test" + str(i) + ".metric" + str(j) + " " + str(random()) + " " + ts + "\n"
 #            out += "%s.test%d.metric%d %s %s\n" % (options.prefix, i, j, sin(float(int(ts) + j)), ts)
         out += "\n\n"
         try:
@@ -88,6 +88,8 @@ g_start_time = time.time()
 addr = socket.getaddrinfo(options.dest, options.port, 0, 0, socket.SOL_TCP)[0][4]
 workers = []
 
+times = []
+
 while 1:
     count += 1
     g_count += 1
@@ -100,22 +102,24 @@ while 1:
         worker.start()
 
     for i in range(0, options.threads):
-        workers[i].join()
+        worker = workers.pop()
+        worker.join()
+
+    time_spent = float(time.time() - start_t)
 
     workers = []
-    time_spent = float(time.time() - start_t)
     output_log()
     log_msg("debug", "Sending %d took %f" % (connections_per_thread * options.threads * metrics, time_spent))
     speed = connections * metrics / time_spent
     if time_spent < 60:
+        log_msg("debug", "Speed %f" % speed)
         sleep_time = float(60 - time_spent)
         time.sleep(sleep_time)
         log_msg("debug", "Slept for %f" % sleep_time)
-        log_msg("debug", "Speed %f" % speed)
     else:
         log_msg("debug", "Overtime for %f" % (float(time_spent - 60.0)))
-        overflow = (time_spent - 60) * speed
         log_msg("debug", "Speed %f, overflow %f" % (speed, overflow))
+        overflow = (time_spent - 60) * speed
 
     if count >= time_step:
         connections += connections_step
@@ -123,6 +127,19 @@ while 1:
         log_msg("info", "Added [%d, %d] = %d, new size is [%d, %d] = %d" % (connections_step, metrics_step, connections_step * metrics_step, connections, metrics, connections * metrics))
         count = 0
 
-    if options.duration and g_count > options.duration:
-        log_msg("info", "Time limit %d exceded, current size %s" % (options.duration, size))
-        sys.exit(0)
+    if options.duration:
+        times.append(time_spent)
+        if g_count >= options.duration:
+             log_msg("info", "Time limit %d exceded, current size %s" % (options.duration, connections * metrics))
+             std = 0.0
+             mean = 0.0
+             cnt = 0
+             for t in times:
+                 cnt += 1
+                 mean += t
+             mean = mean / cnt
+             for t in times:
+                  std += (t - mean)**2
+             std = sqrt(std/cnt)
+             log_msg("info", "Avg time: %f +- %f" % (mean, std))
+             sys.exit(0)
