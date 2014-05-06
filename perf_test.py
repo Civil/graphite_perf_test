@@ -23,26 +23,28 @@ def log_msg(lvl, msg):
     print("%s [m][%s] %s" % (time.ctime(), lvl.lower(), msg))
 
 def generate_load(connections, metrics, thread):
-    ts = "%d" % time.time() 
     log_queue(thread, "debug", "New iteration...")
-    for i in xrange(connections):
+    end_str = " " + str(random()) + " " + str(time.time()) + "\n"
+    for i in range(connections):
         out = ""
         base = options.prefix + ".test" + str(i) + ".metric"
-        for j in xrange(metrics):
-            out += base + str(j) + " " + str(random()) + " " + ts + "\n"
+        for j in range(metrics):
+#            out += bytearray(base + str(j) + " " + random_str + " " + ts + "\n")
+            out += base + str(j) + end_str
 #            out += "%s.test%d.metric%d %s %s\n" % (options.prefix, i, j, sin(float(int(ts) + j)), ts)
         out += "\n\n"
+#        out += bytearray("\n\n")
         try:
             s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
             s.connect(addr)
-            s.send(out)
+            s.sendall(out)
             s.close()
         except Exception as e:
             log_queue(thread, "debug", "Failed to connecto to graphite on host %s, port %i: %s" % (options.dest, options.port, str(e)))
 
 def output_log():
     while not queue.empty():
-        print queue.get()
+        print(queue.get())
 
 
 # get cli arguments
